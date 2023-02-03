@@ -1,6 +1,6 @@
 const path = require("path");
-const urls = require(path.resolve("src/data/urls-data"));
-
+const urls = require("../data/urls-data");
+const uses = require("../data/uses-data");
 
 function create(req, res) {
   const { data: { href } = {} } = req.body;
@@ -12,13 +12,11 @@ function create(req, res) {
   res.status(201).json({ data: newUrl });
 }
 
-
-
 function hasHref(req, res, next) {
   const { data: { href } = {} } = req.body;
 
   if (href) {
-    res.locals.href = href
+    res.locals.href = href;
     return next();
   }
   next({ status: 400, message: "A 'href' property is required." });
@@ -29,20 +27,20 @@ function list(req, res) {
 }
 
 function urlExists(req, res, next) {
-  const urlsId = Number(req.params.urlsId);
-  const foundUrl = urls.find((url) => url.id === urlsId);
+  const urlId = Number(req.params.urlId);
+  const foundUrl = urls.find((url) => url.id === urlId);
   if (foundUrl) {
-    res.locals.url = foundUrl
+    res.locals.url = foundUrl;
     return next();
   }
   next({
     status: 404,
-    message: `${urlsId}`,
+    message: `${urlId}`,
   });
 }
 
 function read(req, res) {
-  res.json({ data: res.locals.url });
+  res.status(200).json({ data: res.locals.url });
 }
 
 function update(req, res) {
@@ -51,21 +49,20 @@ function update(req, res) {
   res.json({ data: res.locals.url });
 }
 
-function recordurl(req, res) {
+function recordUrl(req, res, next) {
   const urlId = req.params.urlId;
   const useRecord = {
     id: urls.length + 1,
-    urlId: urlId,
-    time: Date.now()
+    urlId: parseInt(urlId),
+    time: Date.now(),
   };
-  urls.push(useRecord);
-  console.log("record", useRecord)
-  res.status(200).json({ data: useRecord });
+  uses.push(useRecord);
+  return next();
 }
 module.exports = {
-  create: [hasHref, create],  
+  create: [hasHref, create],
   list,
-  read:[urlExists, recordurl, read],
-  update: [urlExists,hasHref, update],
-  urlExists
-}
+  read: [urlExists, recordUrl, read],
+  update: [urlExists, hasHref, update],
+  urlExists,
+};
